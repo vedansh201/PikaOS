@@ -10,6 +10,18 @@ qt_standard_project_setup()
 
 qt_add_executable(PikaShell
     src/main.cpp
+    src/Core/PikaWindow.cpp
+    src/Core/Desktop.cpp
+    src/Panel/Panel.cpp
+    src/Widgets/PikachuWidget.cpp
 )
+
+qt_add_resources(PikaShell "Resources"
+    PREFIX "/"
+    FILES
+        assets/pikachu.png
+)
+
+target_include_directories(PikaShell PRIVATE include)
 
 target_link_libraries(PikaShell PRIVATE Qt6::Widgets)

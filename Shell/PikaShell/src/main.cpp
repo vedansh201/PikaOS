@@ -1,13 +1,11 @@
 #include <QApplication>
-#include <QWidget>
+#include "Core/PikaWindow.hpp"
 
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
-    QWidget window;
-    window.setWindowTitle("PikaShell");
-    window.resize(1280, 720);
+    PikaWindow window;
     window.show();
 
     return app.exec();

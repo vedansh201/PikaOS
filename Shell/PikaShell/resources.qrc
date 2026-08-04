@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>assets/pikachu.png</file>
+    </qresource>
+</RCC>
