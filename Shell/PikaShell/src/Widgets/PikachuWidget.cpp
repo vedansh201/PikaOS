@@ -55,3 +55,24 @@ void PikachuWidget::setupUi()
          border: 2px solid yellow;
      )");
 }
+#include "Core/PikaController.hpp"
+
+void PikachuWidget::setController(PikaController *controller)
+{
+    m_controller = controller;
+}
+
+void PikachuWidget::mousePressEvent(QMouseEvent *event)
+{
+    QWidget::mousePressEvent(event);
+}
+
+void PikachuWidget::mouseMoveEvent(QMouseEvent *event)
+{
+    QWidget::mouseMoveEvent(event);
+}
+
+void PikachuWidget::mouseReleaseEvent(QMouseEvent *event)
+{
+    QWidget::mouseReleaseEvent(event);
+}
