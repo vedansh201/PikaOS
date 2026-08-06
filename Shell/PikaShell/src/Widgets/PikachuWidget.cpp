@@ -5,7 +5,7 @@
 #include <QPixmap>
 #include <Qt>
 #include <QDebug>
-
+#include <QMouseEvent>
 
 PikachuWidget::PikachuWidget(QWidget *parent)
     : QWidget(parent)
@@ -60,19 +60,46 @@ void PikachuWidget::setupUi()
 void PikachuWidget::setController(PikaController *controller)
 {
     m_controller = controller;
+    
 }
 
 void PikachuWidget::mousePressEvent(QMouseEvent *event)
 {
+    if (event->button() == Qt::LeftButton)
+    {
+        m_dragging = true;
+        m_dragOffset = event->pos();
+
+        if (m_controller)
+            m_controller->setState(PikachuState::Dragged);
+    }
+
     QWidget::mousePressEvent(event);
 }
 
 void PikachuWidget::mouseMoveEvent(QMouseEvent *event)
 {
+    if (m_dragging)
+    {
+        move(mapToParent(event->pos() - m_dragOffset));
+    }
+
     QWidget::mouseMoveEvent(event);
 }
 
 void PikachuWidget::mouseReleaseEvent(QMouseEvent *event)
 {
+    if (event->button() == Qt::LeftButton)
+    {
+        m_dragging = false;
+        if (m_controller)
+        {
+            m_controller->setHomePosition(pos());
+        }
+
+        if (m_controller)
+            m_controller->setState(PikachuState::Idle);
+    }
+
     QWidget::mouseReleaseEvent(event);
 }

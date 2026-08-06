@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(PikaShell)
+project(PikaShell LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
@@ -12,12 +13,12 @@ qt_add_executable(PikaShell
     src/main.cpp
     src/Core/PikaWindow.cpp
     src/Core/Desktop.cpp
+    src/Core/PikaController.cpp
     src/Panel/Panel.cpp
     src/Widgets/PikachuWidget.cpp
 )
 
-qt_add_resources(PikaShell "Resources"
-    PREFIX "/"
+qt_add_resources(PikaShell Resources
     FILES
         assets/pikachu.png
 )
