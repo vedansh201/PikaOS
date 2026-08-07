@@ -1,5 +1,5 @@
 #include "Widgets/PikachuWidget.hpp"
-
+#include <QTransform>
 #include <QLabel>
 #include <QVBoxLayout>
 #include <QPixmap>
@@ -28,20 +28,19 @@ void PikachuWidget::setupUi()
 
     setAutoFillBackground(false);
     m_image->setAutoFillBackground(false);
-    
-    QPixmap pixmap(":/assets/pikachu.png");
+    m_originalPixmap.load(":/assets/pikachu.png");
 
-    qDebug() << "Pixmap null:" << pixmap.isNull();
-    qDebug() << pixmap.size();
+    qDebug() << "Pixmap null:" << m_originalPixmap.isNull();
+    qDebug() << m_originalPixmap.size();
 
     m_image->setPixmap(
-         pixmap.scaled(
-             140,
-             140,
-             Qt::KeepAspectRatio,
-             Qt::SmoothTransformation
-         )
-     );
+        m_originalPixmap.scaled(
+            140,
+            140,
+            Qt::KeepAspectRatio,
+            Qt::SmoothTransformation
+        )
+    );
     m_image->setAlignment(Qt::AlignCenter);
 
     layout->addWidget(m_image);
@@ -61,6 +60,24 @@ void PikachuWidget::setController(PikaController *controller)
 {
     m_controller = controller;
     
+}
+void PikachuWidget::setFacingLeft(bool left)
+{
+    QPixmap pixmap = m_originalPixmap;
+
+    if (left)
+    {
+        pixmap = pixmap.transformed(QTransform().scale(-1, 1));
+    }
+
+    m_image->setPixmap(
+        pixmap.scaled(
+            140,
+            140,
+            Qt::KeepAspectRatio,
+            Qt::SmoothTransformation
+        )
+    );
 }
 
 void PikachuWidget::mousePressEvent(QMouseEvent *event)

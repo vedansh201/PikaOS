@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
 
 project(PikaShell LANGUAGES CXX)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -16,6 +19,9 @@ qt_add_executable(PikaShell
     src/Core/PikaController.cpp
     src/Panel/Panel.cpp
     src/Widgets/PikachuWidget.cpp
+
+    include/Core/PikaController.hpp
+    include/Widgets/PikachuWidget.hpp
 )
 
 qt_add_resources(PikaShell Resources

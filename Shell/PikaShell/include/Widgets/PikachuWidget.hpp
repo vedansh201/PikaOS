@@ -1,5 +1,5 @@
 #pragma once
-
+#include <QPixmap>
 #include <QWidget>
 #include <QPoint>
 
@@ -14,6 +14,7 @@ public:
     explicit PikachuWidget(QWidget *parent = nullptr);
 
     void setController(PikaController *controller);
+    void setFacingLeft(bool left);
 
 protected:
     void mousePressEvent(QMouseEvent *event) override;
@@ -24,6 +25,8 @@ private:
     void setupUi();
 
     QLabel *m_image = nullptr;
+
+    QPixmap m_originalPixmap;
 
     PikaController *m_controller = nullptr;
 
