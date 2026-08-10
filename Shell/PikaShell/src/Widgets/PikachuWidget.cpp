@@ -6,6 +6,10 @@
 #include <Qt>
 #include <QDebug>
 #include <QMouseEvent>
+#include <QDialog>
+#include <QLineEdit>
+#include <QPushButton>
+#include "Core/PikaCommandParser.hpp"
 
 PikachuWidget::PikachuWidget(QWidget *parent)
     : QWidget(parent)
@@ -84,12 +88,14 @@ void PikachuWidget::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton)
     {
-        m_dragging = true;
-        m_dragOffset = event->pos();
-
         if (m_controller)
-            m_controller->setState(PikachuState::Dragged);
+        {
+            m_controller->setState(PikachuState::Interacting);
+        }
+
+        showInteraction();
     }
+
 
     QWidget::mousePressEvent(event);
 }
@@ -119,4 +125,82 @@ void PikachuWidget::mouseReleaseEvent(QMouseEvent *event)
     }
 
     QWidget::mouseReleaseEvent(event);
+}
+
+void PikachuWidget::showInteraction()
+{
+    auto *dialog = new QDialog(nullptr);
+
+    dialog->setWindowTitle("Pikachu");
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+
+    auto *layout = new QVBoxLayout(dialog);
+
+    auto *label = new QLabel(
+        "Hi! What can I do?",
+        dialog
+    );
+
+    label->setAlignment(Qt::AlignCenter);
+
+    auto *input = new QLineEdit(dialog);
+    input->setPlaceholderText("Type a command...");
+
+    auto *sendButton = new QPushButton("Send", dialog);
+
+    layout->addWidget(label);
+    layout->addWidget(input);
+    layout->addWidget(sendButton);
+
+    dialog->resize(300, 150);
+
+    QPoint globalPos = mapToGlobal(QPoint(0, 0));
+
+    dialog->move(
+        globalPos.x() - 60,
+        globalPos.y() - dialog->height() - 10
+    );
+
+    auto *parser = new PikaCommandParser();
+
+    auto executeCommand = [parser, input, label]()
+   {
+        QString command = input->text().trimmed();
+
+        if (command.isEmpty())
+            return;
+
+        PikaCommandResult result =
+            parser->execute(command);
+
+        label->setText(result.message);
+        input->clear();
+   };
+
+    connect(
+        sendButton,
+        &QPushButton::clicked,
+        dialog,
+        executeCommand
+    );
+
+    connect(
+        input,
+        &QLineEdit::returnPressed,
+        dialog,
+        executeCommand
+    );
+
+    connect(
+        dialog,
+        &QDialog::finished,
+        dialog,
+        [parser]()
+        {
+            delete parser;
+        }
+    );
+
+    dialog->show();
+    input->setFocus();
 }

@@ -209,9 +209,16 @@ PikachuState PikaController::state() const
 void PikaController::setState(PikachuState state)
 {
     m_state = state;
+
+    if (state == PikachuState::Interacting)
+    {
+        if (m_walkTimer)
+            m_walkTimer->stop();
+
+        if (m_turnTimer)
+            m_turnTimer->stop();
+    }
 }
-
-
 // ============================================================
 // Home position
 // ============================================================

@@ -19,9 +19,11 @@ qt_add_executable(PikaShell
     src/Core/PikaController.cpp
     src/Panel/Panel.cpp
     src/Widgets/PikachuWidget.cpp
+    src/Core/PikaCommandParser.cpp
 
     include/Core/PikaController.hpp
     include/Widgets/PikachuWidget.hpp
+    include/Core/PikaCommandParser.hpp
 )
 
 qt_add_resources(PikaShell Resources

@@ -6,7 +6,7 @@
 class QLabel;
 class QMouseEvent;
 class PikaController;
-
+class QDialog;
 class PikachuWidget : public QWidget
 {
 
@@ -23,6 +23,7 @@ protected:
 
 private:
     void setupUi();
+    void showInteraction();
 
     QLabel *m_image = nullptr;
 
