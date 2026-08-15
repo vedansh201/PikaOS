@@ -8,6 +8,7 @@
 #include <QStandardPaths>
 #include <QFile>
 #include <QDateTime>
+#include "Terminal/PikaTerminal.hpp"
 
 static QString findFile(const QString &fileName)
 {
@@ -68,12 +69,14 @@ PikaCommandResult PikaCommandParser::execute(const QString &command)
     // Open terminal
     if (input == "open terminal")
     {
-        QProcess::startDetached("konsole");
+       auto *terminal = new PikaTerminal();
+       terminal->setAttribute(Qt::WA_DeleteOnClose);
+       terminal->show();
 
-        return {
-            true,
-            "Opening the terminal..."
-        };
+       return {
+           true,
+           "Opening Pika Terminal..."
+       };
     }
 
     // Open home directory

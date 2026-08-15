@@ -14,22 +14,16 @@ qt_standard_project_setup()
 
 qt_add_executable(PikaShell
     src/main.cpp
-
     src/Core/PikaWindow.cpp
     src/Core/Desktop.cpp
     src/Core/PikaController.cpp
+    src/Panel/Panel.cpp
+    src/Widgets/PikachuWidget.cpp
     src/Core/PikaCommandParser.cpp
 
-    src/Panel/Panel.cpp
-
-    src/Terminal/PikaTerminal.cpp
-
-    src/Widgets/PikachuWidget.cpp
-
     include/Core/PikaController.hpp
-    include/Core/PikaCommandParser.hpp
-    include/Terminal/PikaTerminal.hpp
     include/Widgets/PikachuWidget.hpp
+    include/Core/PikaCommandParser.hpp
 )
 
 qt_add_resources(PikaShell Resources
