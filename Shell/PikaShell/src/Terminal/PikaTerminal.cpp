@@ -1,124 +1,39 @@
 #include "Terminal/PikaTerminal.hpp"
 
-#include <QPlainTextEdit>
-#include <QLineEdit>
-#include <QPushButton>
+#include <qtermwidget.h>
 #include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QProcess>
+#include <QFont>
 
 PikaTerminal::PikaTerminal(QWidget *parent)
     : QWidget(parent)
 {
     setWindowTitle("Pika Terminal");
-    resize(800, 500);
-
-    m_output = new QPlainTextEdit(this);
-    m_output->setReadOnly(true);
-
-    m_input = new QLineEdit(this);
-    m_input->setPlaceholderText("Enter a command...");
-
-    m_runButton = new QPushButton("Run", this);
-
-    auto *inputLayout = new QHBoxLayout;
-    inputLayout->addWidget(m_input);
-    inputLayout->addWidget(m_runButton);
+    resize(900, 600);
 
     auto *layout = new QVBoxLayout(this);
-    layout->addWidget(m_output);
-    layout->addLayout(inputLayout);
+    layout->setContentsMargins(0, 0, 0, 0);
 
-    m_shell = new QProcess(this);
+    m_terminal = new QTermWidget(this);
 
-    connect(
-        m_runButton,
-        &QPushButton::clicked,
-        this,
-        &PikaTerminal::executeCommand
+    // Linux-style terminal appearance
+    m_terminal->setColorScheme("Linux");
+
+    m_terminal->setTerminalFont(
+        QFont("JetBrains Mono", 11)
     );
 
-    connect(
-        m_input,
-        &QLineEdit::returnPressed,
-        this,
-        &PikaTerminal::executeCommand
+    m_terminal->setScrollBarPosition(
+        QTermWidget::ScrollBarRight
     );
 
-    connect(
-        m_shell,
-        &QProcess::readyReadStandardOutput,
-        this,
-        [this]()
-        {
-            QByteArray output = m_shell->readAllStandardOutput();
+    layout->addWidget(m_terminal);
 
-            m_output->moveCursor(QTextCursor::End);
-            m_output->insertPlainText(
-                QString::fromLocal8Bit(output)
-            );
-            m_output->moveCursor(QTextCursor::End);
-        }
-    );
+    // Start Bash
+    m_terminal->startShellProgram();
 
-    connect(
-        m_shell,
-        &QProcess::readyReadStandardError,
-        this,
-        [this]()
-        {
-            QByteArray error = m_shell->readAllStandardError();
-
-            m_output->moveCursor(QTextCursor::End);
-            m_output->insertPlainText(
-                QString::fromLocal8Bit(error)
-            );
-            m_output->moveCursor(QTextCursor::End);
-        }
-    );
-
-    m_output->appendPlainText("Pika Terminal");
-    m_output->appendPlainText("Starting shell...");
-    m_output->appendPlainText("");
-
-    m_shell->start("/bin/bash");
-
-    if (!m_shell->waitForStarted(1000))
-    {
-        m_output->appendPlainText(
-            "Failed to start Bash."
-        );
-    }
+    m_terminal->setFocus();
 }
 
 PikaTerminal::~PikaTerminal()
 {
-    if (m_shell &&
-        m_shell->state() != QProcess::NotRunning)
-    {
-        m_shell->terminate();
-        m_shell->waitForFinished(1000);
-    }
-}
-
-void PikaTerminal::executeCommand()
-{
-    QString command = m_input->text();
-
-    if (command.trimmed().isEmpty())
-        return;
-
-    m_output->moveCursor(QTextCursor::End);
-
-    m_output->insertPlainText(
-        "$ " + command + "\n"
-    );
-
-    m_shell->write(
-        command.toLocal8Bit()
-    );
-
-    m_shell->write("\n");
-
-    m_input->clear();
 }

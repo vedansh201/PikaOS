@@ -1,11 +1,10 @@
 #pragma once
 
 #include <QWidget>
+#include <QStringList>
 
-class QPlainTextEdit;
+class QTermWidget;
 class QLineEdit;
-class QPushButton;
-class QProcess;
 
 class PikaTerminal : public QWidget
 {
@@ -16,10 +15,5 @@ public:
     ~PikaTerminal();
 
 private:
-    QPlainTextEdit *m_output;
-    QLineEdit *m_input;
-    QPushButton *m_runButton;
-    QProcess *m_shell;
-
-    void executeCommand();
+    QTermWidget *m_terminal;
 };

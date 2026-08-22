@@ -39,4 +39,9 @@ qt_add_resources(PikaShell Resources
 
 target_include_directories(PikaShell PRIVATE include)
 
-target_link_libraries(PikaShell PRIVATE Qt6::Widgets)
+find_package(qtermwidget6 REQUIRED)
+
+target_link_libraries(PikaShell PRIVATE
+    Qt6::Widgets
+    qtermwidget6
+)
