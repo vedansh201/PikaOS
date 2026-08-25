@@ -9,6 +9,7 @@
 #include <QFile>
 #include <QDateTime>
 #include "Terminal/PikaTerminal.hpp"
+#include "FileManager/PikaFileManager.hpp"
 
 static QString findFile(const QString &fileName)
 {
@@ -78,7 +79,17 @@ PikaCommandResult PikaCommandParser::execute(const QString &command)
            "Opening Pika Terminal..."
        };
     }
+    if (input == "open files")
+    {
+        auto *fileManager = new PikaFileManager();
+        fileManager->setAttribute(Qt::WA_DeleteOnClose);
+        fileManager->show();
 
+        return {
+            true,
+            "Opening Pika Files..."
+        };
+    }
     // Open home directory
     if (input == "open files")
     {
