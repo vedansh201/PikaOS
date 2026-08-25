@@ -11,6 +11,10 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QUrl>
+#include <QMenu>
+#include <QInputDialog>
+#include <QMessageBox>
+#include <QFile>
 
 PikaFileManager::PikaFileManager(QWidget *parent)
     : QWidget(parent)
@@ -25,6 +29,7 @@ PikaFileManager::PikaFileManager(QWidget *parent)
     m_backButton = new QPushButton("←", this);
     m_forwardButton = new QPushButton("→", this);
     m_upButton = new QPushButton("↑", this);
+    m_newButton = new QPushButton("+ New", this);
 
     m_backButton->setFixedWidth(40);
     m_forwardButton->setFixedWidth(40);
@@ -39,12 +44,68 @@ PikaFileManager::PikaFileManager(QWidget *parent)
     navigationLayout->addWidget(m_forwardButton);
     navigationLayout->addWidget(m_upButton);
     navigationLayout->addWidget(m_pathBar);
-
+    navigationLayout->addWidget(m_newButton);
     // -----------------------------
     // File list
     // -----------------------------
 
     m_fileList = new QListWidget(this);
+   // Sidebar
+    m_sidebar = new QListWidget(this);
+
+    m_sidebar->setFixedWidth(190);
+    m_sidebar->setIconSize(QSize(24, 24));
+    m_sidebar->setSpacing(3);
+
+    auto addSidebarItem =
+        [this](const QString &name,
+               const QString &path)
+   {
+         auto *item =
+             new QListWidgetItem(name);
+
+        item->setData(
+            Qt::UserRole,
+            path
+        );
+
+        m_sidebar->addItem(item);
+   };
+
+    addSidebarItem(
+        "🏠  Home",
+        QDir::homePath()
+   );
+
+    addSidebarItem(
+        "🖥  Desktop",
+        QDir::homePath() + "/Desktop"
+   );
+
+    addSidebarItem(
+        "📄  Documents",
+        QDir::homePath() + "/Documents"
+   );
+
+    addSidebarItem(
+        "⬇  Downloads",
+        QDir::homePath() + "/Downloads"
+   );
+
+    addSidebarItem(
+        "🖼  Pictures",
+        QDir::homePath() + "/Pictures"
+   );
+
+    addSidebarItem(
+        "🎵  Music",
+        QDir::homePath() + "/Music"
+   );
+
+    addSidebarItem(
+        "🎬  Videos",
+        QDir::homePath() + "/Videos"
+   );
 
     m_fileList->setViewMode(QListView::ListMode);
     m_fileList->setIconSize(QSize(32, 32));
@@ -58,8 +119,13 @@ PikaFileManager::PikaFileManager(QWidget *parent)
 
     layout->setContentsMargins(10, 10, 10, 10);
     layout->addLayout(navigationLayout);
-    layout->addWidget(m_fileList);
 
+    auto *contentLayout = new QHBoxLayout;
+
+    contentLayout->addWidget(m_sidebar);
+    contentLayout->addWidget(m_fileList);
+
+    layout->addLayout(contentLayout);
     // -----------------------------
     // Connections
     // -----------------------------
@@ -94,7 +160,21 @@ PikaFileManager::PikaFileManager(QWidget *parent)
         this,
         &PikaFileManager::goUp
     );
-
+    connect(
+        m_sidebar,
+        &QListWidget::itemClicked,
+        this,
+        [this](QListWidgetItem *item)
+        {
+            openSidebarLocation(item);
+        }
+    );
+    connect(
+        m_newButton,
+        &QPushButton::clicked,
+        this,
+        &PikaFileManager::showNewMenu
+    );
     // -----------------------------
     // Start at Home
     // -----------------------------
@@ -185,25 +265,21 @@ void PikaFileManager::loadDirectory(const QString &path)
 void PikaFileManager::openItem()
 {
     auto *item = m_fileList->currentItem();
-    qDebug() << "Pika Files: openItem called";
 
     if (!item)
         return;
 
     QString path =
         item->data(Qt::UserRole).toString();
-    qDebug() << "Selected path:" << path;
 
     QFileInfo info(path);
 
-    // Folder
     if (info.isDir())
     {
         navigateTo(path);
         return;
     }
 
-    // File
     if (info.isFile())
     {
         QDesktopServices::openUrl(
@@ -211,8 +287,6 @@ void PikaFileManager::openItem()
         );
     }
 }
-
-
 // --------------------------------------------------
 // Go up
 // --------------------------------------------------
@@ -263,4 +337,130 @@ void PikaFileManager::goForward()
         m_forwardHistory.takeLast();
 
     loadDirectory(nextPath);
+}
+
+void PikaFileManager::openSidebarLocation(
+    QListWidgetItem *item
+)
+{
+    if (!item)
+        return;
+
+    QString path =
+        item->data(Qt::UserRole).toString();
+
+    QDir directory(path);
+
+    if (!directory.exists())
+        return;
+
+    navigateTo(
+        directory.absolutePath()
+    );
+}
+void PikaFileManager::showNewMenu()
+{
+    QMenu menu(this);
+
+    QAction *newFolder =
+        menu.addAction("📁 New Folder");
+
+    QAction *newFile =
+        menu.addAction("📄 New Text File");
+
+    QAction *selected =
+        menu.exec(
+            m_newButton->mapToGlobal(
+                QPoint(
+                    0,
+                    m_newButton->height()
+                )
+            )
+        );
+
+    if (selected == newFolder)
+    {
+        createFolder();
+    }
+    else if (selected == newFile)
+    {
+        createTextFile();
+    }
+}
+
+void PikaFileManager::createFolder()
+{
+    bool ok = false;
+
+    QString name =
+        QInputDialog::getText(
+            this,
+            "New Folder",
+            "Folder name:",
+            QLineEdit::Normal,
+            "New Folder",
+            &ok
+        );
+
+    if (!ok || name.trimmed().isEmpty())
+        return;
+
+    name = name.trimmed();
+
+    QDir directory(m_currentPath);
+
+    if (!directory.mkdir(name))
+    {
+        QMessageBox::warning(
+            this,
+            "Could not create folder",
+            "The folder could not be created.\n"
+            "It may already exist or you may not have permission."
+        );
+
+        return;
+    }
+
+    loadDirectory(m_currentPath);
+}
+
+void PikaFileManager::createTextFile()
+{
+    bool ok = false;
+
+    QString name =
+        QInputDialog::getText(
+            this,
+            "New Text File",
+            "File name:",
+            QLineEdit::Normal,
+            "New Text File.txt",
+            &ok
+        );
+
+    if (!ok || name.trimmed().isEmpty())
+        return;
+
+    name = name.trimmed();
+
+    QString filePath =
+        QDir(m_currentPath).filePath(name);
+
+    QFile file(filePath);
+
+    if (!file.open(QIODevice::WriteOnly))
+    {
+        QMessageBox::warning(
+            this,
+            "Could not create file",
+            "The file could not be created.\n"
+            "You may not have permission to write here."
+        );
+
+        return;
+    }
+
+    file.close();
+
+    loadDirectory(m_currentPath);
 }

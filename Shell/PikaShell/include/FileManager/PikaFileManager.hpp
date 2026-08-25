@@ -5,8 +5,10 @@
 #include <QStringList>
 
 class QListWidget;
+class QListWidgetItem;
 class QLineEdit;
 class QPushButton;
+class QMenu;
 
 class PikaFileManager : public QWidget
 {
@@ -17,6 +19,7 @@ public:
 
 private:
     QListWidget *m_fileList;
+    QListWidget *m_sidebar;
     QLineEdit *m_pathBar;
 
     QPushButton *m_backButton;
@@ -24,17 +27,20 @@ private:
     QPushButton *m_upButton;
 
     QString m_currentPath;
-
+    QPushButton *m_newButton;
     QStringList m_backHistory;
     QStringList m_forwardHistory;
 
     void loadDirectory(const QString &path);
-
     void openItem();
-
+    void showNewMenu();
+    void createFolder();
+    void createTextFile();
     void goBack();
     void goForward();
     void goUp();
 
     void navigateTo(const QString &path);
+
+    void openSidebarLocation(QListWidgetItem *item);
 };
