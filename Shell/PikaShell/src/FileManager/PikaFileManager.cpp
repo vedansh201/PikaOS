@@ -30,6 +30,7 @@ PikaFileManager::PikaFileManager(QWidget *parent)
     m_forwardButton = new QPushButton("→", this);
     m_upButton = new QPushButton("↑", this);
     m_newButton = new QPushButton("+ New", this);
+    
 
     m_backButton->setFixedWidth(40);
     m_forwardButton->setFixedWidth(40);
@@ -50,12 +51,82 @@ PikaFileManager::PikaFileManager(QWidget *parent)
     // -----------------------------
 
     m_fileList = new QListWidget(this);
+    m_fileList->setContextMenuPolicy(
+        Qt::CustomContextMenu
+    );
    // Sidebar
     m_sidebar = new QListWidget(this);
 
     m_sidebar->setFixedWidth(190);
     m_sidebar->setIconSize(QSize(24, 24));
     m_sidebar->setSpacing(3);
+    connect(
+        m_fileList,
+        &QListWidget::customContextMenuRequested,
+        this,
+        [this](const QPoint &position)
+        {
+            QListWidgetItem *item =
+                m_fileList->itemAt(position);
+
+            if (!item)
+                return;
+
+            QMenu menu(this);
+
+            QAction *openAction =
+                menu.addAction("📂 Open");
+
+            QAction *renameAction =
+                menu.addAction("✏️ Rename");
+
+                menu.addSeparator();
+
+            QAction *copyAction =
+                menu.addAction("📋 Copy");
+
+            QAction *cutAction =
+                menu.addAction("✂️ Cut");
+
+                menu.addSeparator();
+
+            QAction *deleteAction =
+                menu.addAction("🗑️ Delete");
+
+                menu.addSeparator();
+
+            QAction *propertiesAction =
+                menu.addAction("ℹ️ Properties");
+
+            QAction *selectedAction =
+                menu.exec(
+                    m_fileList->viewport()->mapToGlobal(
+                        position
+                   )
+                );
+
+            if (selectedAction == openAction)
+            {
+                m_fileList->setCurrentItem(item);
+                openItem();
+            }
+            else if (selectedAction == renameAction)
+            {
+                m_fileList->setCurrentItem(item);
+                renameItem();
+            }
+            else if (selectedAction == deleteAction)
+            {
+                m_fileList->setCurrentItem(item);
+                deleteItem();
+            }
+            else if (selectedAction == propertiesAction)
+            {
+                m_fileList->setCurrentItem(item);
+                showProperties();
+            }        
+        }
+    );
 
     auto addSidebarItem =
         [this](const QString &name,
@@ -131,50 +202,115 @@ PikaFileManager::PikaFileManager(QWidget *parent)
     // -----------------------------
 
     connect(
-        m_fileList,
-        &QListWidget::itemDoubleClicked,
-        this,
-        [this](QListWidgetItem *)
-        {
-            openItem();
+       m_fileList,
+       &QListWidget::customContextMenuRequested,
+       this,
+       [this](const QPoint &position)
+       {
+            QListWidgetItem *item =
+                m_fileList->itemAt(position);
+
+            QMenu menu(this);
+
+        // ==========================================
+        // Right-click on a file/folder
+        // ==========================================
+
+            if (item)
+            {
+                QAction *openAction =
+                    menu.addAction("📂 Open");
+
+                QAction *renameAction =
+                    menu.addAction("✏️ Rename");
+
+                menu.addSeparator();
+
+                QAction *copyAction =
+                    menu.addAction("📋 Copy");
+
+                QAction *cutAction =
+                    menu.addAction("✂️ Cut");
+
+                menu.addSeparator();
+
+                QAction *deleteAction =
+                    menu.addAction("🗑️ Delete");
+
+                menu.addSeparator();
+
+                QAction *propertiesAction =
+                    menu.addAction("ℹ️ Properties");
+
+                QAction *selectedAction =
+                    menu.exec(
+                        m_fileList->viewport()->mapToGlobal(
+                            position
+                        )
+                    );
+
+                if (selectedAction == openAction)
+                {
+                    m_fileList->setCurrentItem(item);
+                    openItem();
+                }
+                else if (selectedAction == renameAction)
+                {
+                    m_fileList->setCurrentItem(item);
+                    renameItem();
+                }
+                else if (selectedAction == deleteAction)
+                {
+                    m_fileList->setCurrentItem(item);
+                    deleteItem();
+                }
+                else if (selectedAction == propertiesAction)
+                {
+                    m_fileList->setCurrentItem(item);
+                 showProperties();
+                }
+            }
+
+        // ==========================================
+        // Right-click on empty space
+        // ==========================================
+
+            else
+            {
+                QAction *newFolderAction =
+                    menu.addAction("📁 New Folder");
+
+                QAction *newTextFileAction =
+                    menu.addAction("📄 New Text File");
+
+                menu.addSeparator();
+
+                QAction *refreshAction =
+                    menu.addAction("🔄 Refresh");
+
+                QAction *selectedAction =
+                    menu.exec(
+                        m_fileList->viewport()->mapToGlobal(
+                            position
+                        )
+                    );
+
+                if (selectedAction == newFolderAction)
+                {
+                    createFolder();
+                }
+                else if (selectedAction == newTextFileAction)
+                {
+                    createTextFile();
+                }
+                else if (selectedAction == refreshAction)
+                {
+                  loadDirectory(m_currentPath);
+                }
+            }
         }
     );
 
-    connect(
-        m_backButton,
-        &QPushButton::clicked,
-        this,
-        &PikaFileManager::goBack
-    );
-
-    connect(
-        m_forwardButton,
-        &QPushButton::clicked,
-        this,
-        &PikaFileManager::goForward
-    );
-
-    connect(
-        m_upButton,
-        &QPushButton::clicked,
-        this,
-        &PikaFileManager::goUp
-    );
-    connect(
-        m_sidebar,
-        &QListWidget::itemClicked,
-        this,
-        [this](QListWidgetItem *item)
-        {
-            openSidebarLocation(item);
-        }
-    );
-    connect(
-        m_newButton,
-        &QPushButton::clicked,
-        this,
-        &PikaFileManager::showNewMenu
-    );
     // -----------------------------
     // Start at Home
     // -----------------------------
@@ -463,4 +599,155 @@ void PikaFileManager::createTextFile()
     file.close();
 
     loadDirectory(m_currentPath);
+}
+
+void PikaFileManager::renameItem()
+{
+    QListWidgetItem *item =
+        m_fileList->currentItem();
+
+    if (!item)
+        return;
+
+    QString oldPath =
+        item->data(Qt::UserRole).toString();
+
+    QFileInfo info(oldPath);
+
+    if (!info.exists())
+        return;
+
+    bool ok = false;
+
+    QString newName =
+        QInputDialog::getText(
+            this,
+            "Rename",
+            "New name:",
+            QLineEdit::Normal,
+            info.fileName(),
+            &ok
+        );
+
+    if (!ok || newName.trimmed().isEmpty())
+        return;
+
+    newName = newName.trimmed();
+
+    QString newPath =
+        QDir(m_currentPath).filePath(newName);
+
+    if (newPath == oldPath)
+        return;
+
+    if (QFileInfo::exists(newPath))
+    {
+        QMessageBox::warning(
+            this,
+            "Rename failed",
+            "An item with that name already exists."
+        );
+
+        return;
+    }
+
+    QDir directory;
+
+    if (!directory.rename(oldPath, newPath))
+    {
+        QMessageBox::warning(
+            this,
+            "Rename failed",
+            "The item could not be renamed."
+        );
+
+        return;
+    }
+
+    loadDirectory(m_currentPath);
+}
+void PikaFileManager::deleteItem()
+{
+    QListWidgetItem *item =
+        m_fileList->currentItem();
+
+    if (!item)
+        return;
+
+    QString path =
+        item->data(Qt::UserRole).toString();
+
+    QFileInfo info(path);
+
+    QMessageBox::StandardButton reply =
+        QMessageBox::question(
+            this,
+            "Delete",
+            "Are you sure you want to delete:\n\n" +
+                info.fileName() + "?",
+            QMessageBox::Yes |
+            QMessageBox::No
+        );
+
+    if (reply != QMessageBox::Yes)
+        return;
+
+    bool success = false;
+
+    if (info.isDir())
+    {
+        QDir directory(path);
+        success = directory.removeRecursively();
+    }
+    else
+    {
+        success = QFile::remove(path);
+    }
+
+    if (!success)
+    {
+        QMessageBox::warning(
+            this,
+            "Delete Failed",
+            "Could not delete:\n" + path
+        );
+
+        return;
+    }
+
+    loadDirectory(m_currentPath);
+}
+void PikaFileManager::showProperties()
+{
+    QListWidgetItem *item =
+        m_fileList->currentItem();
+
+    if (!item)
+        return;
+
+    QString path =
+        item->data(Qt::UserRole).toString();
+
+    QFileInfo info(path);
+
+    QString type;
+
+    if (info.isDir())
+        type = "Folder";
+    else
+        type = "File";
+
+    QString details =
+        "Name: " + info.fileName() + "\n\n"
+        "Type: " + type + "\n"
+        "Location: " + info.absolutePath() + "\n"
+        "Size: " + QString::number(info.size()) + " bytes\n\n"
+        "Modified: " +
+        info.lastModified().toString();
+
+    QMessageBox::information(
+        this,
+        "Properties",
+        details
+    );
 }

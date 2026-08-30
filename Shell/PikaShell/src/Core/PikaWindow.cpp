@@ -10,7 +10,7 @@ PikaWindow::PikaWindow(QWidget *parent)
     setupUi();
 }
 
-void PikaWindow::setupUi()
+/**void PikaWindow::setupUi()
 {
     setWindowTitle("PikaShell");
     resize(1280, 720);
@@ -30,4 +30,70 @@ void PikaWindow::setupUi()
 
     layout->addWidget(desktop);
     layout->addWidget(m_panel);
+}
+
+void PikaWindow::setupUi()
+{
+    setWindowTitle("PikaShell");
+    resize(1280, 720);
+
+    setStyleSheet(R"(
+        QWidget {
+            background-color: #1E1F29;
+        }
+    )");
+
+    auto *layout = new QVBoxLayout(this);
+
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(0);
+
+    // Temporary test
+    QWidget *test = new QWidget(this);
+
+    layout->addWidget(test);
+}
+
+void PikaWindow::setupUi()
+{
+    setWindowTitle("PikaShell");
+    resize(1280, 720);
+
+    setStyleSheet(R"(
+        QWidget {
+            background-color: #1E1F29;
+        }
+    )");
+
+    auto *layout = new QVBoxLayout(this);
+
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(0);
+
+    Desktop *desktop = new Desktop(this);
+
+    layout->addWidget(desktop);
+}
+**/
+void PikaWindow::setupUi()
+{
+    setWindowTitle("PikaShell");
+    resize(1280, 720);
+
+    setStyleSheet(R"(
+        QWidget {
+            background-color: #1E1F29;
+        }
+    )");
+
+    auto *layout = new QVBoxLayout(this);
+
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(0);
+
+    Desktop *desktop = new Desktop(this);
+    Panel *panel = new Panel(this);
+
+    layout->addWidget(desktop);
+    layout->addWidget(panel);
 }

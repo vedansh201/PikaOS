@@ -14,6 +14,7 @@ class PikaFileManager : public QWidget
 {
     Q_OBJECT
 
+
 public:
     explicit PikaFileManager(QWidget *parent = nullptr);
 
@@ -39,8 +40,10 @@ private:
     void goBack();
     void goForward();
     void goUp();
-
     void navigateTo(const QString &path);
-
+    void renameItem();
+    void deleteItem();
+    void showProperties();
+    void showContextMenu(const QPoint &pos);
     void openSidebarLocation(QListWidgetItem *item);
 };
