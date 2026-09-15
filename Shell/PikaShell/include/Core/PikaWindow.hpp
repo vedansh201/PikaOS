@@ -2,8 +2,8 @@
 
 #include <QWidget>
 
-
 class Panel;
+class PikaApplicationManager;
 
 class PikaWindow : public QWidget
 {
@@ -13,5 +13,6 @@ public:
 private:
     void setupUi();
 
-    Panel *m_panel;
+    Panel *m_panel = nullptr;
+    PikaApplicationManager *m_appManager = nullptr;
 };

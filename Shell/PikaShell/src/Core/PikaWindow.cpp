@@ -3,7 +3,9 @@
 #include "Widgets/PikachuWidget.hpp"
 #include "Core/Desktop.hpp"
 #include <QVBoxLayout>
-
+#include "Core/PikaWindow.hpp"
+#include "Core/PikaApplicationManager.hpp"
+#include "Core/PikaCommandParser.hpp"
 PikaWindow::PikaWindow(QWidget *parent)
     : QWidget(parent)
 {
@@ -90,8 +92,9 @@ void PikaWindow::setupUi()
 
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
+    m_appManager = new PikaApplicationManager(this);
 
-    Desktop *desktop = new Desktop(this);
+    Desktop *desktop = new Desktop(m_appManager, this);
     Panel *panel = new Panel(this);
 
     layout->addWidget(desktop);

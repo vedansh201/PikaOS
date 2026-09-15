@@ -6,13 +6,14 @@
 class QLabel;
 class QMouseEvent;
 class PikaController;
+class PikaApplicationManager;
 class QDialog;
 class PikachuWidget : public QWidget
 {
 
 public:
-    explicit PikachuWidget(QWidget *parent = nullptr);
-
+    explicit PikachuWidget(PikaApplicationManager *appManager,
+                       QWidget *parent = nullptr);
     void setController(PikaController *controller);
     void setFacingLeft(bool left);
 
@@ -33,4 +34,5 @@ private:
 
     bool m_dragging = false;
     QPoint m_dragOffset;
+    PikaApplicationManager *m_appManager = nullptr;
 };

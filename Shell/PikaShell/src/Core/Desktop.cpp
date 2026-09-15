@@ -4,9 +4,18 @@
 #include <QVBoxLayout>
 #include <QDebug>
 #include "Core/PikaController.hpp"
+#include "Core/Desktop.hpp"
+#include "Core/PikaApplicationManager.hpp"
+#include "Widgets/PikachuWidget.hpp"
+#include "Core/PikaController.hpp"
 
-Desktop::Desktop(QWidget *parent)
-    : QWidget(parent)
+#include <QLabel>
+#include <QVBoxLayout>
+#include <QDebug>
+
+Desktop::Desktop(PikaApplicationManager *appManager, QWidget *parent)
+    : QWidget(parent),
+      m_appManager(appManager)
 {
     setupUi();
 }
@@ -22,7 +31,7 @@ void Desktop::setupPikachu()
 {
     qDebug() << "setupPikachu called";
 
-    m_pikachu = new PikachuWidget(this);
+    m_pikachu = new PikachuWidget(m_appManager, this);
 
     auto *controller = new PikaController(this);
 

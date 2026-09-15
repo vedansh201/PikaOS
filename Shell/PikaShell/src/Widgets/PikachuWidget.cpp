@@ -1,4 +1,5 @@
 #include "Widgets/PikachuWidget.hpp"
+
 #include <QTransform>
 #include <QLabel>
 #include <QVBoxLayout>
@@ -9,10 +10,15 @@
 #include <QDialog>
 #include <QLineEdit>
 #include <QPushButton>
-#include "Core/PikaCommandParser.hpp"
 
-PikachuWidget::PikachuWidget(QWidget *parent)
-    : QWidget(parent)
+#include "Core/PikaCommandParser.hpp"
+#include "Core/PikaApplicationManager.hpp"
+#include "Core/PikaController.hpp"
+
+PikachuWidget::PikachuWidget(PikaApplicationManager *appManager,
+                             QWidget *parent)
+    : QWidget(parent),
+      m_appManager(appManager)
 {
     setupUi();
 }
@@ -27,11 +33,12 @@ void PikachuWidget::setupUi()
     m_image = new QLabel(this);
     m_image->setStyleSheet("background: transparent;");
     m_image->setAttribute(Qt::WA_TranslucentBackground);
-    
+
     layout->setSpacing(0);
 
     setAutoFillBackground(false);
     m_image->setAutoFillBackground(false);
+
     m_originalPixmap.load(":/assets/pikachu.png");
 
     qDebug() << "Pixmap null:" << m_originalPixmap.isNull();
@@ -45,26 +52,28 @@ void PikachuWidget::setupUi()
             Qt::SmoothTransformation
         )
     );
+
     m_image->setAlignment(Qt::AlignCenter);
 
     layout->addWidget(m_image);
 
     setAttribute(Qt::WA_TranslucentBackground);
+
     setStyleSheet("background: transparent;");
 
     setFixedSize(160, 160);
+
     setStyleSheet(R"(
-         background: rgba(255,0,0,40);
-         border: 2px solid yellow;
-     )");
+        background: rgba(255,0,0,40);
+        border: 2px solid yellow;
+    )");
 }
-#include "Core/PikaController.hpp"
 
 void PikachuWidget::setController(PikaController *controller)
 {
     m_controller = controller;
-    
 }
+
 void PikachuWidget::setFacingLeft(bool left)
 {
     QPixmap pixmap = m_originalPixmap;
@@ -96,7 +105,6 @@ void PikachuWidget::mousePressEvent(QMouseEvent *event)
         showInteraction();
     }
 
-
     QWidget::mousePressEvent(event);
 }
 
@@ -115,13 +123,16 @@ void PikachuWidget::mouseReleaseEvent(QMouseEvent *event)
     if (event->button() == Qt::LeftButton)
     {
         m_dragging = false;
+
         if (m_controller)
         {
             m_controller->setHomePosition(pos());
         }
 
         if (m_controller)
+        {
             m_controller->setState(PikachuState::Idle);
+        }
     }
 
     QWidget::mouseReleaseEvent(event);
@@ -161,21 +172,23 @@ void PikachuWidget::showInteraction()
         globalPos.y() - dialog->height() - 10
     );
 
-    auto *parser = new PikaCommandParser();
+    auto *parser = new PikaCommandParser(m_appManager);
 
     auto executeCommand = [parser, input, label]()
-   {
+    {
         QString command = input->text().trimmed();
 
         if (command.isEmpty())
+        {
             return;
+        }
 
         PikaCommandResult result =
             parser->execute(command);
 
         label->setText(result.message);
         input->clear();
-   };
+    };
 
     connect(
         sendButton,

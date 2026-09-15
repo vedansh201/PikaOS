@@ -10,6 +10,12 @@
 #include <QDateTime>
 #include "Terminal/PikaTerminal.hpp"
 #include "FileManager/PikaFileManager.hpp"
+#include "Core/PikaApplicationManager.hpp"
+
+PikaCommandParser::PikaCommandParser(PikaApplicationManager *appManager)
+    : m_appManager(appManager)
+{
+}
 
 static QString findFile(const QString &fileName)
 {
@@ -69,27 +75,26 @@ PikaCommandResult PikaCommandParser::execute(const QString &command)
 
     // Open terminal
     if (input == "open terminal")
+{
+    if (m_appManager)
     {
-       auto *terminal = new PikaTerminal();
-       terminal->setAttribute(Qt::WA_DeleteOnClose);
-       terminal->show();
+        m_appManager->openTerminal();
+        return {true, "Opening Pika Terminal..."};
+    }
 
-       return {
-           true,
-           "Opening Pika Terminal..."
-       };
+    return {false, "Application Manager is not available."};
     }
     if (input == "open files")
     {
-        auto *fileManager = new PikaFileManager();
-        fileManager->setAttribute(Qt::WA_DeleteOnClose);
-        fileManager->show();
+        if (m_appManager)
+        {
+            m_appManager->openFiles();
+            return {true, "Opening Pika Files..."};
+        }
 
-        return {
-            true,
-            "Opening Pika Files..."
-        };
+        return {false, "Application Manager is not available."};
     }
+   
     // Open home directory
     if (input == "open files")
     {

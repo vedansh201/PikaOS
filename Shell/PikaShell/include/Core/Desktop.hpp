@@ -3,14 +3,14 @@
 #include <QWidget>
 
 class QLabel;
-class PikachuWidget;   // <-- OUTSIDE the Desktop class
+class PikachuWidget;
+class PikaApplicationManager;
 
 class Desktop : public QWidget
 {
-
-
 public:
-    explicit Desktop(QWidget *parent = nullptr);
+    explicit Desktop(PikaApplicationManager *appManager,
+                     QWidget *parent = nullptr);
 
 private:
     void setupUi();
@@ -19,4 +19,5 @@ private:
     void setupPikachu();
 
     PikachuWidget *m_pikachu = nullptr;
+    PikaApplicationManager *m_appManager = nullptr;
 };

@@ -24,6 +24,7 @@ qt_add_executable(PikaShell
     src/FileManager/PikaFileManager.cpp
 
     src/Terminal/PikaTerminal.cpp
+    src/Core/PikaApplicationManager.cpp
 
     src/Widgets/PikachuWidget.cpp
 
@@ -32,6 +33,7 @@ qt_add_executable(PikaShell
     include/Terminal/PikaTerminal.hpp
     include/Widgets/PikachuWidget.hpp
     include/FileManager/PikaFileManager.hpp
+    include/Core/PikaApplicationManager.hpp
 )
 
 qt_add_resources(PikaShell Resources
