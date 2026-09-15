@@ -46,4 +46,10 @@ private:
     void showProperties();
     void showContextMenu(const QPoint &pos);
     void openSidebarLocation(QListWidgetItem *item);
+    void copyItem();
+    void cutItem();
+    void pasteItem();
+
+    QStringList m_clipboardPaths;
+    bool m_cutOperation;
 };

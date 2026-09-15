@@ -12,6 +12,7 @@
 #include <QVBoxLayout>
 #include <QUrl>
 #include <QMenu>
+#include <QFileSystemModel>
 #include <QInputDialog>
 #include <QMessageBox>
 #include <QFile>
@@ -51,6 +52,11 @@ PikaFileManager::PikaFileManager(QWidget *parent)
     // -----------------------------
 
     m_fileList = new QListWidget(this);
+
+    m_fileList->setSelectionMode(
+        QAbstractItemView::ExtendedSelection
+    );
+
     m_fileList->setContextMenuPolicy(
         Qt::CustomContextMenu
     );
@@ -61,6 +67,40 @@ PikaFileManager::PikaFileManager(QWidget *parent)
     m_sidebar->setIconSize(QSize(24, 24));
     m_sidebar->setSpacing(3);
     connect(
+        m_backButton,
+        &QPushButton::clicked,
+        this,
+        &PikaFileManager::goBack
+    );
+
+    connect(
+        m_forwardButton,
+        &QPushButton::clicked,
+        this,
+        &PikaFileManager::goForward
+    );
+
+    connect(
+        m_upButton,
+        &QPushButton::clicked,
+        this,
+        &PikaFileManager::goUp
+    );
+
+    connect(
+        m_newButton,
+        &QPushButton::clicked,
+        this,
+        &PikaFileManager::showNewMenu
+    );
+
+    connect(
+        m_sidebar,
+        &QListWidget::itemClicked,
+        this,
+        &PikaFileManager::openSidebarLocation
+    );  
+    connect(
         m_fileList,
         &QListWidget::customContextMenuRequested,
         this,
@@ -69,65 +109,112 @@ PikaFileManager::PikaFileManager(QWidget *parent)
             QListWidgetItem *item =
                 m_fileList->itemAt(position);
 
-            if (!item)
-                return;
-
             QMenu menu(this);
 
-            QAction *openAction =
-                menu.addAction("📂 Open");
+        // --------------------------------
+        // Right-clicked on a file/folder
+        // --------------------------------
 
-            QAction *renameAction =
-                menu.addAction("✏️ Rename");
+            if (item)
+            {
+                QAction *openAction =
+                    menu.addAction("📂 Open");
+
+                QAction *renameAction =
+                    menu.addAction("✏️ Rename");
 
                 menu.addSeparator();
 
-            QAction *copyAction =
-                menu.addAction("📋 Copy");
+                QAction *copyAction =
+                    menu.addAction("📋 Copy");
 
-            QAction *cutAction =
-                menu.addAction("✂️ Cut");
-
-                menu.addSeparator();
-
-            QAction *deleteAction =
-                menu.addAction("🗑️ Delete");
+                QAction *cutAction =
+                    menu.addAction("✂️ Cut");
 
                 menu.addSeparator();
 
-            QAction *propertiesAction =
-                menu.addAction("ℹ️ Properties");
+                QAction *deleteAction =
+                    menu.addAction("🗑️ Delete");
 
-            QAction *selectedAction =
-                menu.exec(
-                    m_fileList->viewport()->mapToGlobal(
-                        position
-                   )
-                );
+                menu.addSeparator();
 
-            if (selectedAction == openAction)
-            {
-                m_fileList->setCurrentItem(item);
-                openItem();
+                QAction *propertiesAction =
+                    menu.addAction("ℹ️ Properties");
+
+                QAction *selectedAction =
+                    menu.exec(
+                        m_fileList->viewport()
+                            ->mapToGlobal(position)
+                    );
+
+                if (selectedAction == openAction)
+                {
+                    m_fileList->setCurrentItem(item);
+                    openItem();
+                }
+                else if (selectedAction == renameAction)
+                {
+                    m_fileList->setCurrentItem(item);
+                    renameItem();
+                }
+                else if (selectedAction == copyAction)
+                {
+                    m_fileList->setCurrentItem(item);
+                    copyItem();
+                }
+                else if (selectedAction == cutAction)
+                {
+                    m_fileList->setCurrentItem(item);
+                    cutItem();
+                }
+                else if (selectedAction == deleteAction)
+                {
+                    m_fileList->setCurrentItem(item);
+
+                // Your existing delete function/action
+                // should go here if you already have one.
+                }
+                else if (selectedAction == propertiesAction)
+                {
+                    m_fileList->setCurrentItem(item);
+
+                // Your existing properties function/action
+                // should go here if you already have one.
+                }   
             }
-            else if (selectedAction == renameAction)
+
+        // --------------------------------
+        // Right-clicked on empty space
+        // --------------------------------
+
+            else
             {
-                m_fileList->setCurrentItem(item);
-                renameItem();
+                QAction *pasteAction =
+                    menu.addAction("📥 Paste");
+
+                menu.addSeparator();
+
+                QAction *newAction =
+                    menu.addAction("＋ New");
+
+                QAction *selectedAction =
+                    menu.exec(
+                        m_fileList->viewport()
+                            ->mapToGlobal(position)
+                    );
+
+                if (selectedAction == pasteAction)
+                {
+                    pasteItem();
+                }
+                else if (selectedAction == newAction)
+                {
+                    showNewMenu();
+                }
+            
             }
-            else if (selectedAction == deleteAction)
-            {
-                m_fileList->setCurrentItem(item);
-                deleteItem();
-            }
-            else if (selectedAction == propertiesAction)
-            {
-                m_fileList->setCurrentItem(item);
-                showProperties();
-            }        
         }
     );
-
     auto addSidebarItem =
         [this](const QString &name,
                const QString &path)
@@ -410,12 +497,14 @@ void PikaFileManager::openItem()
 
     QFileInfo info(path);
 
+    // Open folders inside Pika Files
     if (info.isDir())
     {
         navigateTo(path);
         return;
     }
 
+    // Open files using the system's default application
     if (info.isFile())
     {
         QDesktopServices::openUrl(
@@ -692,24 +781,14 @@ void PikaFileManager::deleteItem()
     if (reply != QMessageBox::Yes)
         return;
 
-    bool success = false;
-
-    if (info.isDir())
-    {
-        QDir directory(path);
-        success = directory.removeRecursively();
-    }
-    else
-    {
-        success = QFile::remove(path);
-    }
+    bool success = QFile::moveToTrash(path);
 
     if (!success)
-    {
+        {
         QMessageBox::warning(
             this,
             "Delete Failed",
-            "Could not delete:\n" + path
+            "Could not move this item to the Trash:\n\n" + path
         );
 
         return;
@@ -733,21 +812,266 @@ void PikaFileManager::showProperties()
     QString type;
 
     if (info.isDir())
+    {
         type = "Folder";
+    }
     else
-        type = "File";
+    {
+        QString suffix =
+            info.suffix().toLower();
+
+        if (suffix == "txt")
+            type = "Text File";
+        else if (suffix == "png" ||
+                 suffix == "jpg" ||
+                 suffix == "jpeg")
+            type = "Image";
+        else if (suffix == "mp3" ||
+                 suffix == "wav" ||
+                 suffix == "ogg")
+            type = "Audio File";
+        else if (suffix == "pdf")
+            type = "PDF Document";
+        else
+            type = "File";
+    }
+
+    QString size;
+
+    if (info.isDir())
+    {
+        QDir directory(path);
+
+        int itemCount =
+            directory.entryList(
+                QDir::AllEntries |
+                QDir::NoDotAndDotDot
+            ).count();
+
+        size =
+            QString::number(itemCount) +
+            (itemCount == 1 ? " item" : " items");
+    }
+    else
+    {
+        qint64 bytes = info.size();
+
+        if (bytes < 1024)
+        {
+            size =
+                QString::number(bytes) +
+                " bytes";
+        }
+        else if (bytes < 1024 * 1024)
+        {
+            size =
+                QString::number(
+                    bytes / 1024.0,
+                    'f',
+                    1
+                ) +
+                " KB";
+        }
+        else
+        {
+            size =
+                QString::number(
+                    bytes / (1024.0 * 1024.0),
+                    'f',
+                    1
+                ) +
+                " MB";
+        }
+    }
 
     QString details =
-        "Name: " + info.fileName() + "\n\n"
-        "Type: " + type + "\n"
-        "Location: " + info.absolutePath() + "\n"
-        "Size: " + QString::number(info.size()) + " bytes\n\n"
-        "Modified: " +
-        info.lastModified().toString();
+        "Name:       " + info.fileName() + "\n\n"
+        "Type:       " + type + "\n"
+        "Location:   " + info.absolutePath() + "\n"
+        "Size:       " + size + "\n"
+        "Modified:   " +
+            info.lastModified().toString(
+                "dd MMM yyyy, hh:mm AP"
+            );
 
     QMessageBox::information(
         this,
         "Properties",
         details
     );
+}
+
+void PikaFileManager::copyItem()
+{
+    m_clipboardPaths.clear();
+
+    QList<QListWidgetItem *> selectedItems =
+        m_fileList->selectedItems();
+
+    if (selectedItems.isEmpty())
+        return;
+
+    for (QListWidgetItem *item : selectedItems)
+    {
+        m_clipboardPaths.append(
+            item->data(Qt::UserRole).toString()
+        );
+    }
+
+    m_cutOperation = false;
+
+    qDebug()
+        << "Copied:"
+        << m_clipboardPaths;
+}
+
+
+void PikaFileManager::cutItem()
+{
+    m_clipboardPaths.clear();
+
+    QList<QListWidgetItem *> selectedItems =
+        m_fileList->selectedItems();
+
+    if (selectedItems.isEmpty())
+        return;
+
+    for (QListWidgetItem *item : selectedItems)
+    {
+        m_clipboardPaths.append(
+            item->data(Qt::UserRole).toString()
+        );
+    }
+
+    m_cutOperation = true;
+
+    qDebug()
+        << "Cut:"
+        << m_clipboardPaths;
+}
+
+void PikaFileManager::pasteItem()
+{
+    if (m_clipboardPaths.isEmpty())
+        return;
+
+    bool allSuccessful = true;
+
+    for (const QString &sourcePath : m_clipboardPaths)
+    {
+        QFileInfo sourceInfo(sourcePath);
+
+        if (!sourceInfo.exists())
+        {
+            allSuccessful = false;
+            continue;
+        }
+
+        QString destination =
+            m_currentPath + "/" + sourceInfo.fileName();
+
+        if (QFileInfo::exists(destination))
+        {
+            QMessageBox::warning(
+                this,
+                "Pika Files",
+                "An item named \"" +
+                    sourceInfo.fileName() +
+                    "\" already exists."
+            );
+
+            allSuccessful = false;
+            continue;
+        }
+
+        bool success = false;
+
+        if (sourceInfo.isDir())
+        {
+            QDir sourceDir(sourcePath);
+
+            success =
+                QDir().mkdir(destination);
+
+            if (success)
+            {
+                for (const QFileInfo &entry :
+                     sourceDir.entryInfoList(
+                         QDir::AllEntries |
+                         QDir::NoDotAndDotDot))
+                {
+                    QString target =
+                        destination + "/" +
+                        entry.fileName();
+
+                    if (entry.isDir())
+                    {
+                        if (!QDir().mkpath(target))
+                        {
+                            success = false;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        if (!QFile::copy(
+                                entry.absoluteFilePath(),
+                                target))
+                        {
+                            success = false;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            success =
+                QFile::copy(
+                    sourcePath,
+                    destination
+                );
+        }
+
+        if (!success)
+        {
+            allSuccessful = false;
+            continue;
+        }
+
+        // Cut = move, so remove the original
+        if (m_cutOperation)
+        {
+            if (sourceInfo.isDir())
+            {
+                QDir sourceDir(sourcePath);
+
+                if (!sourceDir.removeRecursively())
+                    allSuccessful = false;
+            }
+            else
+            {
+                if (!QFile::remove(sourcePath))
+                    allSuccessful = false;
+            }
+        }
+    }
+
+    if (!allSuccessful)
+    {
+        QMessageBox::warning(
+            this,
+            "Pika Files",
+            "Some items could not be pasted."
+        );
+    }
+
+    loadDirectory(m_currentPath);
+
+    if (m_cutOperation)
+    {
+        m_clipboardPaths.clear();
+        m_cutOperation = false;
+    }
 }
