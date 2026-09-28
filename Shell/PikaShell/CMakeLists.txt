@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 project(PikaShell LANGUAGES CXX)
+
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
@@ -19,20 +20,20 @@ qt_add_executable(PikaShell
     src/Core/Desktop.cpp
     src/Core/PikaController.cpp
     src/Core/PikaCommandParser.cpp
+    src/Core/PikaApplicationManager.cpp
 
     src/Panel/Panel.cpp
+
     src/FileManager/PikaFileManager.cpp
+    include/FileManager/PikaFileManager.hpp
 
     src/Terminal/PikaTerminal.cpp
-    src/Core/PikaApplicationManager.cpp
+    include/Terminal/PikaTerminal.hpp
+
+    src/Launcher/PikaLauncher.cpp
 
     src/Widgets/PikachuWidget.cpp
 
-    include/Core/PikaController.hpp
-    include/Core/PikaCommandParser.hpp
-    include/Terminal/PikaTerminal.hpp
-    include/Widgets/PikachuWidget.hpp
-    include/FileManager/PikaFileManager.hpp
     include/Core/PikaApplicationManager.hpp
 )
 
@@ -41,7 +42,9 @@ qt_add_resources(PikaShell Resources
         assets/pikachu.png
 )
 
-target_include_directories(PikaShell PRIVATE include)
+target_include_directories(PikaShell PRIVATE
+    include
+)
 
 find_package(qtermwidget6 REQUIRED)
 
