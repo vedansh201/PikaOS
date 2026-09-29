@@ -15,3 +15,18 @@ This project is not complete and is only the first version. I know it has very l
 - Giving it a personal web browser.
 - Interesting TUI for the terminal.
 - Animations which for the assistant.
+
+## How to test the project 
+The easiest way to test PikaOS is through the prebuilt VirtualBox demo.
+
+- Download the PikaOS demo .ova file from the Google Drive link provided in the release.
+- Download and install Oracle VirtualBox if you do not already have it.
+- Open VirtualBox.
+- Go to File → Import Appliance.
+- Select the downloaded PikaOS Demo.ova file.
+- Click Import and wait for the virtual machine to be imported.
+- Start the PikaOS Demo virtual machine.
+- Log into the demo user "pika" the password for that account is ```pika```
+- PikaShell should start automatically after logging in so you wouldn't need to do anything.
+
+And yeah i think that's it.
